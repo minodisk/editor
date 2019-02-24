@@ -1,0 +1,28 @@
+{
+  "name": "paper-editor",
+  "version": "0.0.0",
+  "main": "lib/index.js",
+  "repository": "git@github.com:minodisk/paper-editor.git",
+  "author": "Daisuke Mino <daisuke.mino@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "webpack",
+    "format": "prettier '**/*.{ts,js,json,md}'",
+    "format:fix": "yarn format --write",
+    "format:test": "yarn format -l",
+    "lint": "tslint",
+    "lint:fix": "yarn lint --fix",
+    "test": "yarn format:test"
+  },
+  "devDependencies": {
+    "jest": "^24.1.0",
+    "prettier": "^1.16.4",
+    "ts-loader": "^5.3.3",
+    "tslint": "^5.13.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.0.1",
+    "typescript": "^3.3.3333",
+    "webpack": "^4.29.5",
+    "webpack-cli": "^3.2.3"
+  }
+}

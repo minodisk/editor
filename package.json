@@ -14,11 +14,24 @@
     "lint:fix": "yarn lint --fix",
     "test": "yarn format:test"
   },
+  "dependencies": {
+    "csx": "^9.0.0",
+    "immutable": "^4.0.0-rc.12",
+    "react": "^16.8.3",
+    "react-dom": "^16.8.3",
+    "redux": "^4.0.1",
+    "redux-logger": "^3.0.6",
+    "slate": "^0.44.10",
+    "slate-react": "^0.21.16",
+    "typestyle": "^2.0.1"
+  },
   "devDependencies": {
     "@types/react": "^16.8.4",
     "@types/react-dom": "^16.8.2",
     "@types/react-redux": "^7.0.1",
     "@types/redux-logger": "^3.0.7",
+    "@types/slate": "^0.44.0",
+    "@types/slate-react": "^0.21.0",
     "jest": "^24.1.0",
     "prettier": "^1.16.4",
     "react-redux": "^6.0.1",
@@ -29,13 +42,5 @@
     "typescript": "^3.3.3333",
     "webpack": "^4.29.5",
     "webpack-cli": "^3.2.3"
-  },
-  "dependencies": {
-    "csx": "^9.0.0",
-    "react": "^16.8.3",
-    "react-dom": "^16.8.3",
-    "redux": "^4.0.1",
-    "redux-logger": "^3.0.6",
-    "typestyle": "^2.0.1"
   }
 }

@@ -4,12 +4,11 @@ import { style } from 'typestyle'
 import Linker from './Linker'
 
 interface Props {
-  selectedRect?: ClientRect
+  isSelected: boolean
 }
 
 interface State {
-  isTextSelected: boolean
-  position: Position
+  position: Position | null
   mode: Mode
 }
 
@@ -25,7 +24,6 @@ enum Mode {
 
 export default class Decorator extends React.Component<Props, State> {
   public state = {
-    isTextSelected: false,
     position: { left: 0, top: 0 },
     mode: Mode.None,
   }
@@ -34,24 +32,29 @@ export default class Decorator extends React.Component<Props, State> {
     nextProps: Readonly<Props>,
     nextContext: any,
   ): void {
-    if (nextProps.selectedRect === undefined) {
-      this.setState({ isTextSelected: false })
-    } else {
-      this.setState({
-        isTextSelected: true,
-        position: {
-          left:
-            ((nextProps.selectedRect.left + nextProps.selectedRect.right) /
-              2) >>
-            0,
-          top: nextProps.selectedRect.bottom,
-        },
-      })
-    }
+    this.setState({
+      position: nextProps.isSelected
+        ? (() => {
+            const selection = document.getSelection()
+            if (selection === null) {
+              return null
+            }
+            const range = selection.getRangeAt(0)
+            if (range.startOffset === range.endOffset) {
+              return null
+            }
+            const rect = range.getBoundingClientRect()
+            return {
+              left: ((rect.left + rect.right) / 2) >> 0,
+              top: rect.bottom,
+            }
+          })()
+        : null,
+    })
   }
 
   public render() {
-    if (!this.state.isTextSelected && this.state.mode === Mode.None) {
+    if (this.state.position == null) {
       return null
     }
 

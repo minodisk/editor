@@ -1,11 +1,19 @@
 import { percent, translate } from 'csx'
 import * as React from 'react'
+import { connect } from 'react-redux'
 import { style } from 'typestyle'
+import { AppState } from '../modules'
 import Linker from './Linker'
 
-interface Props {
+interface StateProps {
+  hasLink: boolean
+}
+
+interface OwnProps {
   isSelected: boolean
 }
+
+interface Props extends StateProps, OwnProps {}
 
 interface State {
   position: Position | null
@@ -22,7 +30,7 @@ enum Mode {
   Link,
 }
 
-export default class Decorator extends React.Component<Props, State> {
+class Decorator extends React.Component<Props, State> {
   public state = {
     position: { left: 0, top: 0 },
     mode: Mode.None,
@@ -50,6 +58,7 @@ export default class Decorator extends React.Component<Props, State> {
             }
           })()
         : null,
+      mode: this.props.hasLink ? Mode.Link : Mode.None,
     })
   }
 
@@ -68,9 +77,7 @@ export default class Decorator extends React.Component<Props, State> {
       >
         {this.state.mode === Mode.None ? (
           <React.Fragment>
-            <button onClick={() => this.setState({ mode: Mode.Link })}>
-              #
-            </button>
+            <button onClick={this.onClickLink}>#</button>
           </React.Fragment>
         ) : this.state.mode === Mode.Link ? (
           <Linker />
@@ -78,4 +85,13 @@ export default class Decorator extends React.Component<Props, State> {
       </div>
     )
   }
+
+  private onClickLink = () => this.setState({ mode: Mode.Link })
 }
+
+export default connect(
+  ({ link }: AppState, ownProps: OwnProps): StateProps => ({
+    hasLink: !!link,
+  }),
+  dispatch => ({}),
+)(Decorator)

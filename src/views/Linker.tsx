@@ -3,27 +3,44 @@ import { connect } from 'react-redux'
 import { createLink } from '../modules/link'
 
 interface DispatchProps {
-  createLink: () => void
+  createLink: (url: string) => void
 }
 
-class Linker extends React.Component<DispatchProps> {
+interface State {
+  value: string
+}
+
+class Linker extends React.Component<DispatchProps, State> {
+  public state = {
+    value: '',
+  }
+
   public render() {
     return (
       <form onSubmit={this.onSubmit}>
-        <input type="text" autoFocus />
+        <input
+          type="text"
+          autoFocus
+          value={this.state.value}
+          onChange={this.onChange}
+        />
       </form>
     )
   }
 
+  private onChange = (e: React.FormEvent<HTMLInputElement>) => {
+    this.setState({ value: e.currentTarget.value })
+  }
+
   private onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    this.props.createLink()
+    this.props.createLink(this.state.value)
   }
 }
 
 export default connect(
   (state: any) => ({}),
   dispatch => ({
-    createLink: () => dispatch(createLink()),
+    createLink: (url: string) => dispatch(createLink(url)),
   }),
 )(Linker)

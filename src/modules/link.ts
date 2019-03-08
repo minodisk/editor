@@ -1,17 +1,43 @@
 import { Action } from 'redux'
 
-export const CREATE_LINK = 'CREATE_LINK'
+enum ActionTypes {
+  CREATE_LINK = 'CREATE_LINK',
+  CLEAR_LINK = 'CLEAR_LINK',
+}
 
-export const createLink = (): Action => {
-  return {
-    type: CREATE_LINK,
+interface CreateLinkAction extends Action {
+  type: ActionTypes.CREATE_LINK
+  payload: {
+    url: string
   }
 }
 
-export default function link(state: boolean = false, action: Action) {
+export interface ClearLinkAction extends Action {
+  type: ActionTypes.CLEAR_LINK
+}
+
+export const createLink = (url: string): CreateLinkAction => {
+  return {
+    type: ActionTypes.CREATE_LINK,
+    payload: { url },
+  }
+}
+
+export const clearLink = (): ClearLinkAction => {
+  return {
+    type: ActionTypes.CLEAR_LINK,
+  }
+}
+
+export default function link(
+  state: string = '',
+  action: CreateLinkAction | ClearLinkAction,
+) {
   switch (action.type) {
-    case CREATE_LINK:
-      return true
+    case ActionTypes.CREATE_LINK:
+      return action.payload.url
+    case ActionTypes.CLEAR_LINK:
+      return ''
     default:
       return state
   }

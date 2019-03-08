@@ -1,17 +1,29 @@
 import { em } from 'csx'
 import * as React from 'react'
 import { connect } from 'react-redux'
-import { Value } from 'slate'
-import { Editor as SlateEditor } from 'slate-react'
+import { Editor as SlateEditor, Mark, Selection, Value } from 'slate'
+import { Editor as SlateReactEditor, RenderMarkProps } from 'slate-react'
 import { style } from 'typestyle'
+import { AppState } from '../modules'
+import { clearLink, ClearLinkAction } from '../modules/link'
 import Decorator from './Decorator'
+
+interface StateProps {
+  link: string
+}
+
+interface DispatchProps {
+  clearLink: () => ClearLinkAction
+}
+
+interface Props extends StateProps, DispatchProps {}
 
 interface State {
   value: Value
-  isSelected: boolean
+  selection: Selection | null
 }
 
-class Editor extends React.Component<null, State> {
+class Editor extends React.Component<Props, State> {
   public state: State = {
     value: Value.fromJSON({
       document: {
@@ -34,7 +46,30 @@ class Editor extends React.Component<null, State> {
         ],
       },
     }),
-    isSelected: false,
+    selection: null,
+  }
+
+  public componentWillReceiveProps(
+    nextProps: Readonly<Props>,
+    nextContext: any,
+  ): void {
+    if (
+      nextProps.link &&
+      this.state.selection != null &&
+      this.state.selection.anchor.path != null
+    ) {
+      this.setState({
+        value: this.state.value.addMark(
+          this.state.selection.anchor.path,
+          this.state.selection.anchor.offset,
+          this.state.selection.focus.offset -
+            this.state.selection.anchor.offset,
+          Mark.create({ type: 'link', data: { href: nextProps.link } }),
+        ),
+        selection: null,
+      })
+      this.props.clearLink()
+    }
   }
 
   public render() {
@@ -52,30 +87,65 @@ class Editor extends React.Component<null, State> {
             height: '100%',
             fontFamily:
               "'Noto Serif JP', Georgia, Cambria, 'Times New Roman', Times, serif",
-            marginTop: 10,
-            marginBottom: 0,
             fontSize: 21,
             lineHeight: 1.58,
             letterSpacing: em(-0.003),
+            $nest: {
+              p: {
+                marginTop: 10,
+                marginBottom: 0,
+              },
+            },
           })}
         >
-          <SlateEditor value={this.state.value} onChange={this.onChange} />
+          <SlateReactEditor
+            value={this.state.value}
+            onChange={this.onChange}
+            renderMark={this.renderMark}
+          />
         </div>
-        <Decorator isSelected={this.state.isSelected} />
+        <Decorator isSelected={this.state.selection != null} />
       </div>
     )
+  }
+
+  private renderMark = (
+    props: RenderMarkProps,
+    editor: SlateEditor,
+    next: () => any,
+  ) => {
+    switch (props.mark.type) {
+      case 'bold': {
+        return <strong {...props.attributes}>{props.children}</strong>
+      }
+      case 'link': {
+        return (
+          <a href={props.mark.data.get('href')} {...props.attributes}>
+            {props.children}
+          </a>
+        )
+      }
+      default: {
+        next()
+        return
+      }
+    }
   }
 
   private onChange = ({ value }: { value: Value }) => {
     this.setState({
       value,
-      isSelected:
-        value.selection.anchor.offset !== value.selection.focus.offset,
+      selection:
+        value.selection.anchor.offset === value.selection.focus.offset
+          ? null
+          : value.selection,
     })
   }
 }
 
 export default connect(
-  (state: any) => ({}),
-  dispatch => ({}),
+  ({ link }: AppState) => ({ link }),
+  dispatch => ({
+    clearLink: () => dispatch(clearLink()),
+  }),
 )(Editor)

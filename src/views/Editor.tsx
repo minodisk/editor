@@ -2,7 +2,11 @@ import { em } from 'csx'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Editor as SlateEditor, Mark, Selection, Value } from 'slate'
-import { Editor as SlateReactEditor, RenderMarkProps } from 'slate-react'
+import {
+  Editor as SlateReactEditor,
+  RenderMarkProps,
+  RenderNodeProps,
+} from 'slate-react'
 import { style } from 'typestyle'
 import { AppState } from '../modules'
 import { clearLink, ClearLinkAction } from '../modules/link'
@@ -101,12 +105,50 @@ class Editor extends React.Component<Props, State> {
           <SlateReactEditor
             value={this.state.value}
             onChange={this.onChange}
+            onKeyDown={this.onKeyDown}
+            renderNode={this.renderNode}
             renderMark={this.renderMark}
           />
         </div>
         <Decorator isSelected={this.state.selection != null} />
       </div>
     )
+  }
+
+  private onChange = ({ value }: { value: Value }) => {
+    this.setState({
+      value,
+      selection:
+        value.selection.anchor.offset === value.selection.focus.offset
+          ? null
+          : value.selection,
+    })
+  }
+
+  private onKeyDown = (event: Event, editor: SlateEditor, next: () => any) => {
+    const e: KeyboardEvent = event as KeyboardEvent
+    if (e.key !== 'Enter') {
+      return next()
+    }
+    if (!e.shiftKey) {
+      return next()
+    }
+    return editor.insertText('\n')
+  }
+
+  private renderNode = (
+    props: RenderNodeProps,
+    editor: SlateEditor,
+    next: () => any,
+  ) => {
+    switch (props.node.type) {
+      case 'paragraph': {
+        return <p {...props.attributes}>{props.children}</p>
+      }
+      default: {
+        return next()
+      }
+    }
   }
 
   private renderMark = (
@@ -126,20 +168,9 @@ class Editor extends React.Component<Props, State> {
         )
       }
       default: {
-        next()
-        return
+        return next()
       }
     }
-  }
-
-  private onChange = ({ value }: { value: Value }) => {
-    this.setState({
-      value,
-      selection:
-        value.selection.anchor.offset === value.selection.focus.offset
-          ? null
-          : value.selection,
-    })
   }
 }
 

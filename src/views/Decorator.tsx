@@ -1,3 +1,5 @@
+import IconButton from '@material-ui/core/IconButton'
+import InsertLink from '@material-ui/icons/InsertLink'
 import { percent, translate } from 'csx'
 import * as React from 'react'
 import { connect } from 'react-redux'
@@ -76,9 +78,9 @@ class Decorator extends React.Component<Props, State> {
         })}
       >
         {this.state.mode === Mode.None ? (
-          <React.Fragment>
-            <button onClick={this.onClickLink}>#</button>
-          </React.Fragment>
+          <IconButton onClick={this.onClickLink}>
+            <InsertLink />
+          </IconButton>
         ) : this.state.mode === Mode.Link ? (
           <Linker />
         ) : null}

@@ -1,3 +1,4 @@
+import TextField from '@material-ui/core/TextField'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { createLink } from '../modules/link'
@@ -18,8 +19,7 @@ class Linker extends React.Component<DispatchProps, State> {
   public render() {
     return (
       <form onSubmit={this.onSubmit}>
-        <input
-          type="text"
+        <TextField
           autoFocus
           value={this.state.value}
           onChange={this.onChange}
@@ -28,8 +28,8 @@ class Linker extends React.Component<DispatchProps, State> {
     )
   }
 
-  private onChange = (e: React.FormEvent<HTMLInputElement>) => {
-    this.setState({ value: e.currentTarget.value })
+  private onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ value: e.target.value })
   }
 
   private onSubmit = (e: React.FormEvent) => {

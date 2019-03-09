@@ -1,22 +1,79 @@
 import { em } from 'csx'
 import * as React from 'react'
 import { connect } from 'react-redux'
+import { Editor as SlateEditor, Mark, Selection, Value } from 'slate'
+import {
+  Editor as SlateReactEditor,
+  RenderMarkProps,
+  RenderNodeProps,
+} from 'slate-react'
 import { style } from 'typestyle'
+import { AppState } from '../modules'
+import { clearLink, ClearLinkAction } from '../modules/link'
 import Decorator from './Decorator'
 
-interface State {
-  selectedRect?: ClientRect
+interface StateProps {
+  link: string
 }
 
-class Editor extends React.Component<null, State> {
-  public state: State = {}
+interface DispatchProps {
+  clearLink: () => ClearLinkAction
+}
 
-  public componentWillMount() {
-    document.addEventListener('selectionchange', this.onSelectionChanged)
+interface Props extends StateProps, DispatchProps {}
+
+interface State {
+  value: Value
+  selection: Selection | null
+}
+
+class Editor extends React.Component<Props, State> {
+  public state: State = {
+    value: Value.fromJSON({
+      document: {
+        nodes: [
+          {
+            object: 'block',
+            type: 'paragraph',
+            nodes: [
+              {
+                object: 'text',
+                leaves: [
+                  {
+                    object: 'leaf',
+                    text: 'A line of text in a paragraph.',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    }),
+    selection: null,
   }
 
-  public componentWillUnmount() {
-    document.removeEventListener('selectionchange', this.onSelectionChanged)
+  public componentWillReceiveProps(
+    nextProps: Readonly<Props>,
+    nextContext: any,
+  ): void {
+    if (
+      nextProps.link &&
+      this.state.selection != null &&
+      this.state.selection.anchor.path != null
+    ) {
+      this.setState({
+        value: this.state.value.addMark(
+          this.state.selection.anchor.path,
+          this.state.selection.anchor.offset,
+          this.state.selection.focus.offset -
+            this.state.selection.anchor.offset,
+          Mark.create({ type: 'link', data: { href: nextProps.link } }),
+        ),
+        selection: null,
+      })
+      this.props.clearLink()
+    }
   }
 
   public render() {
@@ -29,62 +86,97 @@ class Editor extends React.Component<null, State> {
         })}
       >
         <div
-          contentEditable
-          suppressContentEditableWarning
           className={style({
             width: '100%',
             height: '100%',
             fontFamily:
               "'Noto Serif JP', Georgia, Cambria, 'Times New Roman', Times, serif",
+            fontSize: 21,
+            lineHeight: 1.58,
+            letterSpacing: em(-0.003),
             $nest: {
               p: {
                 marginTop: 10,
                 marginBottom: 0,
-                fontSize: 21,
-                lineHeight: 1.58,
-                letterSpacing: em(-0.003),
               },
             },
           })}
         >
-          <p>
-            あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。
-          </p>
-          <p>
-            またそのなかでいっしょになったたくさんのひとたち、ファゼーロとロザーロ、羊飼のミーロや、顔の赤いこどもたち、地主のテーモ、山猫博士のボーガント・デストゥパーゴなど、いまこの暗い巨きな石の建物のなかで考えていると、みんなむかし風のなつかしい青い幻燈のように思われます。
-          </p>
-          <p>
-            では、わたくしはいつかの小さなみだしをつけながら、しずかにあの年のイーハトーヴォの五月から十月までを書きつけましょう。
-          </p>
+          <SlateReactEditor
+            value={this.state.value}
+            onChange={this.onChange}
+            onKeyDown={this.onKeyDown}
+            renderNode={this.renderNode}
+            renderMark={this.renderMark}
+          />
         </div>
-        <Decorator selectedRect={this.state.selectedRect} />
+        <Decorator isSelected={this.state.selection != null} />
       </div>
     )
   }
 
-  private onSelectionChanged = (e: Event) => {
-    const selection = document.getSelection()
-    if (selection === null) {
-      this.setState({
-        selectedRect: undefined,
-      })
-      return
-    }
-    const range = selection.getRangeAt(0)
-    if (range.startOffset === range.endOffset) {
-      this.setState({
-        selectedRect: undefined,
-      })
-      return
-    }
-    const selectedRect = range.getBoundingClientRect()
+  private onChange = ({ value }: { value: Value }) => {
     this.setState({
-      selectedRect,
+      value,
+      selection:
+        value.selection.anchor.offset === value.selection.focus.offset
+          ? null
+          : value.selection,
     })
+  }
+
+  private onKeyDown = (event: Event, editor: SlateEditor, next: () => any) => {
+    const e: KeyboardEvent = event as KeyboardEvent
+    if (e.key !== 'Enter') {
+      return next()
+    }
+    if (!e.shiftKey) {
+      return next()
+    }
+    return editor.insertText('\n')
+  }
+
+  private renderNode = (
+    props: RenderNodeProps,
+    editor: SlateEditor,
+    next: () => any,
+  ) => {
+    switch (props.node.type) {
+      case 'paragraph': {
+        return <p {...props.attributes}>{props.children}</p>
+      }
+      default: {
+        return next()
+      }
+    }
+  }
+
+  private renderMark = (
+    props: RenderMarkProps,
+    editor: SlateEditor,
+    next: () => any,
+  ) => {
+    switch (props.mark.type) {
+      case 'bold': {
+        return <strong {...props.attributes}>{props.children}</strong>
+      }
+      case 'link': {
+        return (
+          <a href={props.mark.data.get('href')} {...props.attributes}>
+            {props.children}
+          </a>
+        )
+      }
+      default: {
+        return next()
+      }
+    }
   }
 }
 
 export default connect(
-  (state: any) => ({}),
-  dispatch => ({}),
+  ({ link }: AppState) => ({ link }),
+  dispatch => ({
+    clearLink: () => dispatch(clearLink()),
+  }),
 )(Editor)

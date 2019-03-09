@@ -1,15 +1,22 @@
 import { percent, translate } from 'csx'
 import * as React from 'react'
+import { connect } from 'react-redux'
 import { style } from 'typestyle'
+import { AppState } from '../modules'
 import Linker from './Linker'
 
-interface Props {
-  selectedRect?: ClientRect
+interface StateProps {
+  hasLink: boolean
 }
 
+interface OwnProps {
+  isSelected: boolean
+}
+
+interface Props extends StateProps, OwnProps {}
+
 interface State {
-  isTextSelected: boolean
-  position: Position
+  position: Position | null
   mode: Mode
 }
 
@@ -23,9 +30,8 @@ enum Mode {
   Link,
 }
 
-export default class Decorator extends React.Component<Props, State> {
+class Decorator extends React.Component<Props, State> {
   public state = {
-    isTextSelected: false,
     position: { left: 0, top: 0 },
     mode: Mode.None,
   }
@@ -34,24 +40,30 @@ export default class Decorator extends React.Component<Props, State> {
     nextProps: Readonly<Props>,
     nextContext: any,
   ): void {
-    if (nextProps.selectedRect === undefined) {
-      this.setState({ isTextSelected: false })
-    } else {
-      this.setState({
-        isTextSelected: true,
-        position: {
-          left:
-            ((nextProps.selectedRect.left + nextProps.selectedRect.right) /
-              2) >>
-            0,
-          top: nextProps.selectedRect.bottom,
-        },
-      })
-    }
+    this.setState({
+      position: nextProps.isSelected
+        ? (() => {
+            const selection = document.getSelection()
+            if (selection === null) {
+              return null
+            }
+            const range = selection.getRangeAt(0)
+            if (range.startOffset === range.endOffset) {
+              return null
+            }
+            const rect = range.getBoundingClientRect()
+            return {
+              left: ((rect.left + rect.right) / 2) >> 0,
+              top: rect.bottom,
+            }
+          })()
+        : null,
+      mode: this.props.hasLink ? Mode.Link : Mode.None,
+    })
   }
 
   public render() {
-    if (!this.state.isTextSelected && this.state.mode === Mode.None) {
+    if (this.state.position == null) {
       return null
     }
 
@@ -65,9 +77,7 @@ export default class Decorator extends React.Component<Props, State> {
       >
         {this.state.mode === Mode.None ? (
           <React.Fragment>
-            <button onClick={() => this.setState({ mode: Mode.Link })}>
-              #
-            </button>
+            <button onClick={this.onClickLink}>#</button>
           </React.Fragment>
         ) : this.state.mode === Mode.Link ? (
           <Linker />
@@ -75,4 +85,13 @@ export default class Decorator extends React.Component<Props, State> {
       </div>
     )
   }
+
+  private onClickLink = () => this.setState({ mode: Mode.Link })
 }
+
+export default connect(
+  ({ link }: AppState, ownProps: OwnProps): StateProps => ({
+    hasLink: !!link,
+  }),
+  dispatch => ({}),
+)(Decorator)

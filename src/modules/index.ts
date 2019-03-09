@@ -1,6 +1,10 @@
 import { combineReducers } from 'redux'
 import link from './link'
 
-export const reducer = combineReducers({
+export interface AppState {
+  link: string
+}
+
+export const reducer = combineReducers<AppState>({
   link,
 })

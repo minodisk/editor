@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "build": "webpack",
+    "build:watch": "yarn build --watch",
     "format": "prettier '**/*.{ts,js,json,md}'",
     "format:fix": "yarn format --write",
     "format:test": "yarn format -l",
@@ -15,6 +16,8 @@
     "test": "yarn format:test"
   },
   "dependencies": {
+    "@material-ui/core": "^3.9.2",
+    "@material-ui/icons": "^3.0.2",
     "csx": "^9.0.0",
     "immutable": "^4.0.0-rc.12",
     "react": "^16.8.3",

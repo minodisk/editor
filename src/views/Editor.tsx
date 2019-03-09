@@ -1,4 +1,4 @@
-import { em } from 'csx'
+import { em, percent, rgba } from 'csx'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Editor as SlateEditor, Mark, Selection, Value } from 'slate'
@@ -80,24 +80,37 @@ class Editor extends React.Component<Props, State> {
     return (
       <div
         className={style({
-          width: '100%',
-          height: '100%',
+          width: percent(100),
+          height: percent(100),
           position: 'relative',
         })}
       >
         <div
           className={style({
-            width: '100%',
-            height: '100%',
+            boxSizing: 'border-box',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            width: percent(100),
+            maxWidth: 740,
+            height: percent(100),
+            paddingLeft: 20,
+            paddingRight: 20,
             fontFamily:
               "'Noto Serif JP', Georgia, Cambria, 'Times New Roman', Times, serif",
             fontSize: 21,
             lineHeight: 1.58,
             letterSpacing: em(-0.003),
+            color: rgba(0, 0, 0, 0.84).toString(),
             $nest: {
               p: {
-                marginTop: 10,
+                marginTop: 29,
                 marginBottom: 0,
+                '&:first-child': {
+                  marginTop: 0,
+                },
+              },
+              a: {
+                color: 'inherit',
               },
             },
           })}

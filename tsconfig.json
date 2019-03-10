@@ -9,8 +9,20 @@
     "rootDirs": ["src"],
     "baseUrl": ".",
     "paths": {
-      "@storybook/addon-storyshots": [
-        "./definitions/storybook__addon-storyshots"
+      "hastscript": [
+        "./definitions/hastscript"
+      ],
+      "hast-util-to-html": [
+        "./definitions/hast-util-to-html"
+      ],
+      "rehype-parse": [
+        "./definitions/rehype-parse"
+      ],
+      "rehype-react": [
+        "./definitions/rehype-react"
+      ],
+      "rehype-stringify": [
+        "./definitions/rehype-stringify"
       ]
     },
     "sourceMap": true,

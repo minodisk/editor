@@ -19,6 +19,7 @@
     "@material-ui/core": "^3.9.2",
     "@material-ui/icons": "^3.0.2",
     "csx": "^9.0.0",
+    "fast-deep-equal": "^2.0.1",
     "hast-util-to-html": "^5.0.0",
     "hastscript": "^5.0.0",
     "immutable": "^4.0.0-rc.12",

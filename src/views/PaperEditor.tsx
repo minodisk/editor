@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import { style } from 'typestyle'
 import { AppState } from '../modules'
 import { clearLink, ClearLinkAction } from '../modules/link'
-// import Decorator from './Decorator'
+import Decorator from './Decorator'
 import Editor from './Editor/Editor'
 
 interface StateProps {
@@ -17,59 +17,14 @@ interface DispatchProps {
 
 interface Props extends StateProps, DispatchProps {}
 
-// interface State {
-//   value: Value
-//   selection: Selection | null
-// }
+interface State {
+  selectedRange?: Range
+}
 
-class PaperEditor extends React.Component<Props, {}> {
-  // public state: State = {
-  //   value: Value.fromJSON({
-  //     document: {
-  //       nodes: [
-  //         {
-  //           object: 'block',
-  //           type: 'paragraph',
-  //           nodes: [
-  //             {
-  //               object: 'text',
-  //               leaves: [
-  //                 {
-  //                   object: 'leaf',
-  //                   text: 'A line of text in a paragraph.',
-  //                 },
-  //               ],
-  //             },
-  //           ],
-  //         },
-  //       ],
-  //     },
-  //   }),
-  //   selection: null,
-  // }
-
-  // public componentWillReceiveProps(
-  //   nextProps: Readonly<Props>,
-  //   nextContext: any,
-  // ): void {
-  //   if (
-  //     nextProps.link &&
-  //     this.state.selection != null &&
-  //     this.state.selection.anchor.path != null
-  //   ) {
-  //     this.setState({
-  //       value: this.state.value.addMark(
-  //         this.state.selection.anchor.path,
-  //         this.state.selection.anchor.offset,
-  //         this.state.selection.focus.offset -
-  //           this.state.selection.anchor.offset,
-  //         Mark.create({ type: 'link', data: { href: nextProps.link } }),
-  //       ),
-  //       selection: null,
-  //     })
-  //     this.props.clearLink()
-  //   }
-  // }
+class PaperEditor extends React.Component<Props, State> {
+  public state = {
+    selectedRange: undefined,
+  }
 
   public render() {
     return (
@@ -80,7 +35,7 @@ class PaperEditor extends React.Component<Props, {}> {
           position: 'relative',
         })}
       >
-        <div
+        <Editor
           className={style({
             boxSizing: 'border-box',
             marginLeft: 'auto',
@@ -109,13 +64,40 @@ class PaperEditor extends React.Component<Props, {}> {
               },
             },
           })}
-        >
-          <Editor />
-        </div>
-        {/*<Decorator isSelected={this.state.selection != null} />*/}
+          onSelect={this.onSelect}
+          onUnselect={this.onUnselect}
+        />
+        <Decorator
+          selectedRange={this.state.selectedRange}
+          onLink={this.onLink}
+        />
       </div>
     )
   }
+
+  private onSelect = (selection: Selection) => {
+    console.log('onSelect:', selection)
+    this.setState({
+      selectedRange: selection.getRangeAt(0),
+    })
+  }
+
+  private onUnselect = () => {
+    console.log('onUnselect')
+    this.setState({
+      selectedRange: undefined,
+    })
+  }
+
+  private onLink = (url: string) => {
+    console.log('onLink:', url, this.state.selectedRange)
+  }
+
+  // private onCancel = () => {
+  //   this.setState({
+  //     selectedRange: undefined,
+  //   })
+  // }
 
   // private onChange = ({ value }: { value: Value }) => {
   //   this.setState({
@@ -143,7 +125,7 @@ class PaperEditor extends React.Component<Props, {}> {
   //   editor: SlateEditor,
   //   next: () => any,
   // ) => {
-  //   switch (props.node.type) {
+  //   switch (props.root.type) {
   //     case 'paragraph': {
   //       return <p {...props.attributes}>{props.children}</p>
   //     }

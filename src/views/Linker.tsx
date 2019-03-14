@@ -1,17 +1,16 @@
 import TextField from '@material-ui/core/TextField'
 import * as React from 'react'
-import { connect } from 'react-redux'
-import { createLink } from '../modules/link'
 
-interface DispatchProps {
-  createLink: (url: string) => void
+interface Props {
+  onLink: (url: string) => void
+  onCancel: () => void
 }
 
 interface State {
   value: string
 }
 
-class Linker extends React.Component<DispatchProps, State> {
+export default class Linker extends React.Component<Props, State> {
   public state = {
     value: '',
   }
@@ -23,6 +22,7 @@ class Linker extends React.Component<DispatchProps, State> {
           autoFocus
           value={this.state.value}
           onChange={this.onChange}
+          onBlur={this.onBlur}
         />
       </form>
     )
@@ -32,15 +32,21 @@ class Linker extends React.Component<DispatchProps, State> {
     this.setState({ value: e.target.value })
   }
 
+  private onBlur = (e: React.FocusEvent) => {
+    this.linkOrCancel()
+  }
+
   private onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    this.props.createLink(this.state.value)
+    this.linkOrCancel()
+  }
+
+  private linkOrCancel(): void {
+    if (!this.state.value) {
+      this.props.onCancel()
+      return
+    }
+    this.props.onLink(this.state.value)
+    this.setState({ value: '' })
   }
 }
-
-export default connect(
-  (state: any) => ({}),
-  dispatch => ({
-    createLink: (url: string) => dispatch(createLink(url)),
-  }),
-)(Linker)

@@ -2,24 +2,17 @@ import IconButton from '@material-ui/core/IconButton'
 import InsertLink from '@material-ui/icons/InsertLink'
 import { percent, translate } from 'csx'
 import * as React from 'react'
-import { connect } from 'react-redux'
 import { style } from 'typestyle'
-import { AppState } from '../modules'
 import Linker from './Linker'
 
-interface StateProps {
-  hasLink: boolean
+interface Props {
+  selectedRange?: Range
+  onLink?: (url: string) => void
 }
-
-interface OwnProps {
-  isSelected: boolean
-}
-
-interface Props extends StateProps, OwnProps {}
 
 interface State {
-  position: Position | null
   mode: Mode
+  position?: Position
 }
 
 interface Position {
@@ -32,10 +25,10 @@ enum Mode {
   Link,
 }
 
-class Decorator extends React.Component<Props, State> {
+export default class Decorator extends React.Component<Props, State> {
   public state = {
-    position: { left: 0, top: 0 },
     mode: Mode.None,
+    position: undefined,
   }
 
   public componentWillReceiveProps(
@@ -43,29 +36,27 @@ class Decorator extends React.Component<Props, State> {
     nextContext: any,
   ): void {
     this.setState({
-      position: nextProps.isSelected
+      position: nextProps.selectedRange
         ? (() => {
-            const selection = document.getSelection()
-            if (selection === null) {
-              return null
+            if (
+              nextProps.selectedRange.startOffset ===
+              nextProps.selectedRange.endOffset
+            ) {
+              return undefined
             }
-            const range = selection.getRangeAt(0)
-            if (range.startOffset === range.endOffset) {
-              return null
-            }
-            const rect = range.getBoundingClientRect()
+            const rect = nextProps.selectedRange.getBoundingClientRect()
             return {
               left: ((rect.left + rect.right) / 2) >> 0,
               top: rect.bottom,
             }
           })()
-        : null,
-      mode: this.props.hasLink ? Mode.Link : Mode.None,
+        : undefined,
     })
   }
 
   public render() {
-    if (this.state.position == null) {
+    const { position } = this.state
+    if (!position) {
       return null
     }
 
@@ -74,7 +65,7 @@ class Decorator extends React.Component<Props, State> {
         className={style({
           transform: translate(percent(-50)),
           position: 'absolute',
-          ...this.state.position,
+          ...(position || {}),
         })}
       >
         {this.state.mode === Mode.None ? (
@@ -82,18 +73,22 @@ class Decorator extends React.Component<Props, State> {
             <InsertLink />
           </IconButton>
         ) : this.state.mode === Mode.Link ? (
-          <Linker />
+          <Linker onLink={this.onLink} onCancel={this.onCancel} />
         ) : null}
       </div>
     )
   }
 
   private onClickLink = () => this.setState({ mode: Mode.Link })
-}
 
-export default connect(
-  ({ link }: AppState, ownProps: OwnProps): StateProps => ({
-    hasLink: !!link,
-  }),
-  dispatch => ({}),
-)(Decorator)
+  private onLink = (url: string) => {
+    this.setState({ mode: Mode.None, position: undefined })
+    if (this.props.onLink) {
+      this.props.onLink(url)
+    }
+  }
+
+  private onCancel = () => {
+    this.setState({ mode: Mode.None, position: undefined })
+  }
+}

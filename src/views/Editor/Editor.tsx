@@ -10,9 +10,11 @@ export interface Wrapper {
 interface Props {
   className?: string
   link?: Wrapper
+  bold?: Wrapper
   onSelect?: (selection: Selection) => void
   onUnselect?: () => void
   onLink?: () => void
+  onBold?: () => void
 }
 
 interface State {
@@ -34,12 +36,19 @@ export default class Editor extends React.Component<Props, State> {
     nextContext: any,
   ): void {
     if (nextProps.link) {
-      console.log('link!')
       this.wrap(
         nextProps.link.range,
         'a',
         nextProps.link.properties,
         this.props.onLink,
+      )
+    }
+    if (nextProps.bold) {
+      this.wrap(
+        nextProps.bold.range,
+        'b',
+        nextProps.bold.properties,
+        this.props.onBold,
       )
     }
   }

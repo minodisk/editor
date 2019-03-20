@@ -1,5 +1,7 @@
 import TextField from '@material-ui/core/TextField'
+import { px } from 'csx'
 import * as React from 'react'
+import { style } from 'typestyle'
 
 interface Props {
   onLink: (url: string) => void
@@ -17,9 +19,16 @@ export default class Linker extends React.Component<Props, State> {
 
   public render() {
     return (
-      <form onSubmit={this.onSubmit}>
+      <form
+        className={style({
+          paddingLeft: px(6),
+          paddingRight: px(6),
+        })}
+        onSubmit={this.onSubmit}
+      >
         <TextField
           autoFocus
+          placeholder="Paste or type a link..."
           value={this.state.value}
           onChange={this.onChange}
           onBlur={this.onBlur}

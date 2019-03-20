@@ -1,4 +1,5 @@
-import { em, percent, rgba } from 'csx'
+import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles'
+import { em, percent, rgb, rgba } from 'csx'
 import * as React from 'react'
 import { style } from 'typestyle'
 import Decorator from './Decorator'
@@ -7,62 +8,78 @@ import Editor, { Wrapper } from './Editor/Editor'
 interface State {
   selectedRange?: Range
   link?: Wrapper
+  bold?: Wrapper
 }
 
 export default class PaperEditor extends React.Component<{}, State> {
   public state = {
     selectedRange: undefined,
     link: undefined,
+    bold: undefined,
   }
 
   public render() {
+    const theme = createMuiTheme({
+      overrides: {
+        MuiInputBase: {
+          root: {
+            color: rgb(0xff, 0xff, 0xff).toHexString(),
+          },
+        },
+      },
+    })
     return (
-      <div
-        className={style({
-          width: percent(100),
-          height: percent(100),
-          position: 'relative',
-        })}
-      >
-        <Editor
+      <MuiThemeProvider theme={theme}>
+        <div
           className={style({
-            boxSizing: 'border-box',
-            marginLeft: 'auto',
-            marginRight: 'auto',
             width: percent(100),
-            maxWidth: 740,
             height: percent(100),
-            paddingLeft: 20,
-            paddingRight: 20,
-            fontFamily:
-              "'Noto Serif JP', Georgia, Cambria, 'Times New Roman', Times, serif",
-            fontSize: 21,
-            lineHeight: 1.58,
-            letterSpacing: em(-0.003),
-            color: rgba(0, 0, 0, 0.84).toString(),
-            $nest: {
-              p: {
-                marginTop: 29,
-                marginBottom: 0,
-                '&:first-child': {
-                  marginTop: 0,
+            position: 'relative',
+          })}
+        >
+          <Editor
+            className={style({
+              boxSizing: 'border-box',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+              width: percent(100),
+              maxWidth: 740,
+              height: percent(100),
+              paddingLeft: 20,
+              paddingRight: 20,
+              fontFamily:
+                "'Noto Serif JP', Georgia, Cambria, 'Times New Roman', Times, serif",
+              fontSize: 21,
+              lineHeight: 1.58,
+              letterSpacing: em(-0.003),
+              color: rgba(0, 0, 0, 0.84).toString(),
+              $nest: {
+                p: {
+                  marginTop: 29,
+                  marginBottom: 0,
+                  '&:first-child': {
+                    marginTop: 0,
+                  },
+                },
+                a: {
+                  color: 'inherit',
                 },
               },
-              a: {
-                color: 'inherit',
-              },
-            },
-          })}
-          link={this.state.link}
-          onSelect={this.onSelect}
-          onUnselect={this.onUnselect}
-          onLink={() => this.setState({ link: undefined })}
-        />
-        <Decorator
-          selectedRange={this.state.selectedRange}
-          onLink={this.onLink}
-        />
-      </div>
+            })}
+            link={this.state.link}
+            bold={this.state.bold}
+            onSelect={this.onSelect}
+            onUnselect={this.onUnselect}
+            onLink={() => this.setState({ link: undefined })}
+            onBold={() => this.setState({ bold: undefined })}
+          />
+          <Decorator
+            selectedRange={this.state.selectedRange}
+            onLink={this.onLink}
+            onBold={this.onBold}
+          />
+        </div>
+      </MuiThemeProvider>
     )
   }
 
@@ -90,6 +107,20 @@ export default class PaperEditor extends React.Component<{}, State> {
       link: {
         range: selectedRange,
         properties: { href: url },
+      },
+    })
+  }
+
+  private onBold = () => {
+    console.log('onBold:', this.state.selectedRange)
+    const { selectedRange } = this.state
+    if (selectedRange === undefined) {
+      return
+    }
+    this.setState({
+      bold: {
+        range: selectedRange,
+        properties: {},
       },
     })
   }

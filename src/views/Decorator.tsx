@@ -1,6 +1,7 @@
 import IconButton from '@material-ui/core/IconButton'
+import FormatBold from '@material-ui/icons/FormatBold'
 import InsertLink from '@material-ui/icons/InsertLink'
-import { percent, translate } from 'csx'
+import { important, percent, px, rgb, translate } from 'csx'
 import * as React from 'react'
 import { style } from 'typestyle'
 import Linker from './Linker'
@@ -8,6 +9,7 @@ import Linker from './Linker'
 interface Props {
   selectedRange?: Range
   onLink?: (url: string) => void
+  onBold?: () => void
 }
 
 interface State {
@@ -23,6 +25,17 @@ interface Position {
 enum Mode {
   None,
   Link,
+}
+
+const iconButtonClasses = {
+  root: style({
+    padding: important(px(10).toString()),
+  }),
+}
+const iconClasses = {
+  root: style({
+    color: important(rgb(0xff, 0xff, 0xff).toHexString()),
+  }),
 }
 
 export default class Decorator extends React.Component<Props, State> {
@@ -65,21 +78,31 @@ export default class Decorator extends React.Component<Props, State> {
         className={style({
           transform: translate(percent(-50)),
           position: 'absolute',
+          backgroundColor: rgb(0x26, 0x26, 0x25).toHexString(),
           ...(position || {}),
         })}
       >
         {this.state.mode === Mode.None ? (
-          <IconButton onClick={this.onClickLink}>
-            <InsertLink />
+          <IconButton classes={iconButtonClasses} onClick={this.onClickLink}>
+            <InsertLink classes={iconClasses} />
           </IconButton>
         ) : this.state.mode === Mode.Link ? (
           <Linker onLink={this.onLink} onCancel={this.onCancel} />
         ) : null}
+        <IconButton classes={iconButtonClasses} onClick={this.onClickBold}>
+          <FormatBold classes={iconClasses} />
+        </IconButton>
       </div>
     )
   }
 
   private onClickLink = () => this.setState({ mode: Mode.Link })
+
+  private onClickBold = () => {
+    if (this.props.onBold) {
+      this.props.onBold()
+    }
+  }
 
   private onLink = (url: string) => {
     this.setState({ mode: Mode.None, position: undefined })

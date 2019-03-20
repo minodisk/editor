@@ -1,3 +1,4 @@
+import * as h from 'hastscript'
 import * as rehypeParse from 'rehype-parse'
 import * as rehypeStringify from 'rehype-stringify'
 // import * as rehypeToReact from 'rehype-react'
@@ -15,26 +16,64 @@ export const toHtml: (node: HastNode) => string = unified().use(rehypeStringify)
 //   },
 // ).stringify as any
 
+export interface Properties {
+  [key: string]: string
+}
+
 export interface HastNode extends Node {
+  parent: HastNode
+  index: number
   tagName: string
-  properties: { [key: string]: string }
+  properties: Properties
   children: Array<HastNode>
 }
 
 export default class Ast {
   public root!: HastNode
-  // private count = 0
 
   constructor(html?: string) {
     if (!html) {
       return
     }
-    this.update(html)
+    this.setHtml(html)
   }
 
-  public update(html: string): void {
-    const root = toAst(html)
-    this.root = root.children[0].children[1] // root.html.body
+  public setHtml(html: string): void {
+    this.root = toAst(html).children[0].children[1] // root.html.body
+    this.register(this.root)
+  }
+
+  public wrap(
+    start: HastNode,
+    end: HastNode,
+    startOffset: number,
+    endOffset: number,
+    tagName: string,
+    properties: { [key: string]: string },
+  ): void {
+    if (start === end) {
+      console.log('wrap:', start, end, tagName, properties)
+
+      const text = start.value as string
+      const text0 = text.substring(0, startOffset)
+      const text1 = text.substring(startOffset, endOffset)
+      const text2 = text.substring(endOffset)
+      const args: Array<any> = [start.index, 1]
+      if (text0) {
+        args.push({ type: 'text', value: text0 })
+      }
+      if (text1) {
+        args.push(h(tagName, properties, { type: 'text', value: text1 }))
+      }
+      if (text2) {
+        args.push({ type: 'text', value: text2 })
+      }
+      console.log(args)
+      start.parent.children.splice.apply(start.parent.children, args)
+      this.register(start.parent)
+      console.log(start.parent.children)
+      console.log(this.toHtml())
+    }
   }
 
   public toHtml(): string {
@@ -55,6 +94,17 @@ export default class Ast {
       return node
     }
     return this.downstream(node.children[index], indexes)
+  }
+
+  private register(parent: HastNode): void {
+    if (!parent.children) {
+      return
+    }
+    parent.children.forEach((child, index) => {
+      child.parent = parent
+      child.index = index
+      this.register(child)
+    })
   }
 
   // private addMark = (root: HastNode): HastNode => {

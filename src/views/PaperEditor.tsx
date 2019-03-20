@@ -1,29 +1,18 @@
 import { em, percent, rgba } from 'csx'
 import * as React from 'react'
-import { connect } from 'react-redux'
 import { style } from 'typestyle'
-import { AppState } from '../modules'
-import { clearLink, ClearLinkAction } from '../modules/link'
 import Decorator from './Decorator'
-import Editor from './Editor/Editor'
-
-interface StateProps {
-  link: string
-}
-
-interface DispatchProps {
-  clearLink: () => ClearLinkAction
-}
-
-interface Props extends StateProps, DispatchProps {}
+import Editor, { Wrapper } from './Editor/Editor'
 
 interface State {
   selectedRange?: Range
+  link?: Wrapper
 }
 
-class PaperEditor extends React.Component<Props, State> {
+export default class PaperEditor extends React.Component<{}, State> {
   public state = {
     selectedRange: undefined,
+    link: undefined,
   }
 
   public render() {
@@ -64,8 +53,10 @@ class PaperEditor extends React.Component<Props, State> {
               },
             },
           })}
+          link={this.state.link}
           onSelect={this.onSelect}
           onUnselect={this.onUnselect}
+          onLink={() => this.setState({ link: undefined })}
         />
         <Decorator
           selectedRange={this.state.selectedRange}
@@ -76,7 +67,7 @@ class PaperEditor extends React.Component<Props, State> {
   }
 
   private onSelect = (selection: Selection) => {
-    console.log('onSelect:', selection)
+    console.log('onSelect:', selection, selection.getRangeAt(0))
     this.setState({
       selectedRange: selection.getRangeAt(0),
     })
@@ -84,13 +75,23 @@ class PaperEditor extends React.Component<Props, State> {
 
   private onUnselect = () => {
     console.log('onUnselect')
-    this.setState({
-      selectedRange: undefined,
-    })
+    // this.setState({
+    //   selectedRange: undefined,
+    // })
   }
 
   private onLink = (url: string) => {
     console.log('onLink:', url, this.state.selectedRange)
+    const { selectedRange } = this.state
+    if (selectedRange === undefined || url === '') {
+      return
+    }
+    this.setState({
+      link: {
+        range: selectedRange,
+        properties: { href: url },
+      },
+    })
   }
 
   // private onCancel = () => {
@@ -157,10 +158,3 @@ class PaperEditor extends React.Component<Props, State> {
   //   }
   // }
 }
-
-export default connect(
-  ({ link }: AppState) => ({ link }),
-  dispatch => ({
-    clearLink: () => dispatch(clearLink()),
-  }),
-)(PaperEditor)

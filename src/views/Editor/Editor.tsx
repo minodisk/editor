@@ -1,11 +1,18 @@
 import * as React from 'react'
 import ContentEditable from 'react-contenteditable'
-import Ast, { HastNode } from './Ast'
+import Ast, { HastNode, Properties } from './Ast'
+
+export interface Wrapper {
+  range: Range
+  properties: { [key: string]: string }
+}
 
 interface Props {
   className?: string
+  link?: Wrapper
   onSelect?: (selection: Selection) => void
   onUnselect?: () => void
+  onLink?: () => void
 }
 
 interface State {
@@ -14,12 +21,28 @@ interface State {
 
 export default class Editor extends React.Component<Props, State> {
   public ast = new Ast('<p><br /></p>')
+
   public state = {
     html: this.ast.toHtml(),
   }
   public ref = React.createRef()
 
   private isSelected = false
+
+  public componentWillReceiveProps(
+    nextProps: Readonly<Props>,
+    nextContext: any,
+  ): void {
+    if (nextProps.link) {
+      console.log('link!')
+      this.wrap(
+        nextProps.link.range,
+        'a',
+        nextProps.link.properties,
+        this.props.onLink,
+      )
+    }
+  }
 
   public render() {
     return (
@@ -43,8 +66,6 @@ export default class Editor extends React.Component<Props, State> {
     if (!selection) {
       return
     }
-
-    this.getHastNode(selection.getRangeAt(0).startContainer)
 
     this.isSelected = true
     if (!this.props.onSelect) {
@@ -77,6 +98,32 @@ export default class Editor extends React.Component<Props, State> {
     return selection
   }
 
+  private wrap(
+    range: Range,
+    tagName: string,
+    properties: Properties,
+    callback?: () => void,
+  ) {
+    const start = this.getHastNode(range.startContainer)
+    const end = this.getHastNode(range.endContainer)
+
+    this.ast.wrap(
+      start,
+      end,
+      range.startOffset,
+      range.endOffset,
+      tagName,
+      properties,
+    )
+
+    this.setState(
+      {
+        html: this.ast.toHtml(),
+      },
+      callback,
+    )
+  }
+
   private getHastNode(node: Node): HastNode {
     return this.ast.find(this.upstream(node))
   }
@@ -105,7 +152,7 @@ export default class Editor extends React.Component<Props, State> {
   }
 
   private update = (html: string) => {
-    this.ast.update(html)
+    this.ast.setHtml(html)
     // console.log('---------------------------')
     // console.log(html)
     // console.log('===')

@@ -7,10 +7,26 @@ export interface Wrapper {
   properties: { [key: string]: string }
 }
 
+// export type HeadlineLevel = 1 | 2 | 3 | 4 | 5 | 6
+
+export enum HeadlineLevel {
+  h1 = 1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+}
+
+export interface Headline extends Wrapper {
+  level: HeadlineLevel
+}
+
 interface Props {
   className?: string
   link?: Wrapper
   bold?: Wrapper
+  headline?: Headline
   onSelect?: (selection: Selection) => void
   onUnselect?: () => void
   onLink?: () => void
@@ -49,6 +65,14 @@ export default class Editor extends React.Component<Props, State> {
         'b',
         nextProps.bold.properties,
         this.props.onBold,
+      )
+    }
+    if (nextProps.headline) {
+      this.replaceWrapper(
+        nextProps.headline.range,
+        `h${nextProps.headline.level}`,
+        nextProps.headline.properties,
+        this.props.onHeadline,
       )
     }
   }
@@ -131,6 +155,18 @@ export default class Editor extends React.Component<Props, State> {
       },
       callback,
     )
+  }
+
+  private replaceWrapper(
+    range: Range,
+    tagName: string,
+    properties: Properties,
+    callback?: () => void,
+  ) {
+    const start = this.getHastNode(range.startContainer)
+    const end = this.getHastNode(range.endContainer)
+
+    console.log(this.ast.blocksBetween(start, end))
   }
 
   private getHastNode(node: Node): HastNode {

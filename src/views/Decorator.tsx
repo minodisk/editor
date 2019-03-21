@@ -1,15 +1,18 @@
 import IconButton from '@material-ui/core/IconButton'
 import FormatBold from '@material-ui/icons/FormatBold'
 import InsertLink from '@material-ui/icons/InsertLink'
-import { important, percent, px, rgb, translate } from 'csx'
+import Title from '@material-ui/icons/Title'
+import {important, percent, px, rgb, translate} from 'csx'
 import * as React from 'react'
-import { style } from 'typestyle'
+import {style} from 'typestyle'
+import {HeadlineLevel} from './Editor'
 import Linker from './Linker'
 
 interface Props {
   selectedRange?: Range
   onLink?: (url: string) => void
   onBold?: () => void
+  onHeadline?: (level: HeadlineLevel) => void
 }
 
 interface State {
@@ -83,15 +86,29 @@ export default class Decorator extends React.Component<Props, State> {
         })}
       >
         {this.state.mode === Mode.None ? (
-          <IconButton classes={iconButtonClasses} onClick={this.onClickLink}>
-            <InsertLink classes={iconClasses} />
-          </IconButton>
+          <React.Fragment>
+            <IconButton classes={iconButtonClasses} onClick={this.onClickLink}>
+              <InsertLink classes={iconClasses} />
+            </IconButton>
+            <IconButton classes={iconButtonClasses} onClick={this.onClickBold}>
+              <FormatBold classes={iconClasses} />
+            </IconButton>
+            <IconButton
+              classes={iconButtonClasses}
+              onClick={() => this.onClickHeadline(HeadlineLevel.h1)}
+            >
+              <Title classes={iconClasses} />
+            </IconButton>
+            <IconButton
+              classes={iconButtonClasses}
+              onClick={() => this.onClickHeadline(HeadlineLevel.h2)}
+            >
+              <Title classes={iconClasses} />
+            </IconButton>
+          </React.Fragment>
         ) : this.state.mode === Mode.Link ? (
           <Linker onLink={this.onLink} onCancel={this.onCancel} />
         ) : null}
-        <IconButton classes={iconButtonClasses} onClick={this.onClickBold}>
-          <FormatBold classes={iconClasses} />
-        </IconButton>
       </div>
     )
   }
@@ -101,6 +118,12 @@ export default class Decorator extends React.Component<Props, State> {
   private onClickBold = () => {
     if (this.props.onBold) {
       this.props.onBold()
+    }
+  }
+
+  private onClickHeadline = (level: HeadlineLevel) => {
+    if (this.props.onHeadline) {
+      this.props.onHeadline(level)
     }
   }
 

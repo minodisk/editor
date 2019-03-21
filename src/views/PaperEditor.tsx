@@ -3,12 +3,13 @@ import { em, percent, rgb, rgba } from 'csx'
 import * as React from 'react'
 import { style } from 'typestyle'
 import Decorator from './Decorator'
-import Editor, { Wrapper } from './Editor/Editor'
+import Editor, { Headline, HeadlineLevel, Wrapper } from './Editor/Editor'
 
 interface State {
   selectedRange?: Range
   link?: Wrapper
   bold?: Wrapper
+  headline?: Headline
 }
 
 export default class PaperEditor extends React.Component<{}, State> {
@@ -16,6 +17,7 @@ export default class PaperEditor extends React.Component<{}, State> {
     selectedRange: undefined,
     link: undefined,
     bold: undefined,
+    headline: undefined,
   }
 
   public render() {
@@ -68,6 +70,7 @@ export default class PaperEditor extends React.Component<{}, State> {
             })}
             link={this.state.link}
             bold={this.state.bold}
+            headline={this.state.headline}
             onSelect={this.onSelect}
             onUnselect={this.onUnselect}
             onLink={() => this.setState({ link: undefined })}
@@ -77,6 +80,7 @@ export default class PaperEditor extends React.Component<{}, State> {
             selectedRange={this.state.selectedRange}
             onLink={this.onLink}
             onBold={this.onBold}
+            onHeadline={this.onHeadline}
           />
         </div>
       </MuiThemeProvider>
@@ -121,6 +125,21 @@ export default class PaperEditor extends React.Component<{}, State> {
       bold: {
         range: selectedRange,
         properties: {},
+      },
+    })
+  }
+
+  private onHeadline = (level: HeadlineLevel) => {
+    console.log('onHeadline:', level, this.state.selectedRange)
+    const { selectedRange } = this.state
+    if (selectedRange === undefined) {
+      return
+    }
+    this.setState({
+      headline: {
+        range: selectedRange,
+        properties: {},
+        level,
       },
     })
   }

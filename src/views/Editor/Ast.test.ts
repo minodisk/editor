@@ -1,23 +1,55 @@
-import * as h from 'hastscript'
+import * as s from 'hast-util-select'
 import * as assert from 'power-assert'
-import { text as t } from './hastscript-util'
+import { Node } from 'unist'
+import Ast, { HastNode } from './Ast'
+
+const select = (selector: string, node: HastNode): HastNode =>
+  s.select(selector, node as Node) as any
 
 describe('Ast', () => {
+  describe('find()', () => {
+    ;[
+      {
+        name: 'should return position of the first element',
+        html: `<p id="a" />`,
+        target: '#a',
+        expected: [0],
+      },
+      {
+        name: 'should return position of the second element',
+        html: `<p id="a" /><p id="b" />`,
+        target: '#b',
+        expected: [1],
+      },
+      {
+        name: 'should return position of deep element',
+        html: `<div><p id="a" /><p id="b" /></div>`,
+        target: '#b',
+        expected: [0, 1],
+      },
+    ].forEach(({ name, html, target, expected }) => {
+      it(name, () => {
+        const ast = new Ast(`<html><body>${html}</body></html>`)
+        assert.deepEqual(ast.find(select(target, ast.root)), expected)
+      })
+    })
+  })
+
   describe('blocksBetween()', () => {
     ;[
       {
         name: 'should return blocks',
-        body: h('body', h('p', t('')), h('p', t(''))),
-        start: [0, 1],
-        end: [1, 1],
+        html: `<p id="a" /><p id="b" />`,
+        start: '#a',
+        end: '#b',
         expected: [[0], [1]],
       },
-    ].forEach(({ name, body, start, end, expected }) => {
+    ].forEach(({ name, html, start, end, expected }) => {
       it(name, () => {
-        const ast = new Ast(body)
+        const ast = new Ast(`<html><body>${html}</body></html>`)
         assert.deepEqual(
-          ast.blocksBetween(ast.find(start), ast.find(end)),
-          expected.map(indexes => ast.find(indexes)),
+          ast.blocksBetween(select(start, ast.root), select(end, ast.root)),
+          expected.map(indexes => ast.nodeAt(indexes)),
         )
       })
     })

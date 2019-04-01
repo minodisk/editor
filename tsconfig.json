@@ -9,11 +9,14 @@
     "rootDirs": ["src"],
     "baseUrl": ".",
     "paths": {
-      "hastscript": [
-        "./definitions/hastscript"
+      "hast-util-select": [
+        "./definitions/hast-util-select"
       ],
       "hast-util-to-html": [
         "./definitions/hast-util-to-html"
+      ],
+      "hastscript": [
+        "./definitions/hastscript"
       ],
       "rehype-parse": [
         "./definitions/rehype-parse"

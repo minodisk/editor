@@ -6,6 +6,8 @@ import * as unified from 'unified'
 import { Node } from 'unist'
 import { text as t } from './hastscript-util'
 
+export type Find = (node: HastNode, pos: Array<number>) => boolean
+
 export const toAst: (html: string) => HastNode = unified().use(rehypeParse)
   .parse as any
 export const toHtml: (node: HastNode) => string = unified().use(rehypeStringify)
@@ -16,6 +18,20 @@ export const toHtml: (node: HastNode) => string = unified().use(rehypeStringify)
 //     createElement: React.createElement,
 //   },
 // ).stringify as any
+
+const traverse = (tree: HastNode, pos: Array<number>, find: Find): boolean => {
+  for (let i = 0; i < tree.children.length; i++) {
+    const node = tree.children[i]
+    const p = pos.concat([i])
+    if (find(node, p)) {
+      return true
+    }
+    if (traverse(node, p, find)) {
+      return true
+    }
+  }
+  return false
+}
 
 export interface Properties {
   [key: string]: string
@@ -77,8 +93,20 @@ export default class Ast {
     }
   }
 
-  public blocksBetween(start: HastNode, end: HastNode): Array<HastNode> {
-    return []
+  public find(node: HastNode): Array<number> {
+    let pos: Array<number> = []
+    this.traverse((n: HastNode, p: Array<number>) => {
+      const found = n === node
+      if (found) {
+        pos = p
+      }
+      return found
+    })
+    return pos
+  }
+
+  private traverse(find: Find): void {
+    traverse(this.root, [], find)
   }
 
   public toHtml(): string {
@@ -89,7 +117,11 @@ export default class Ast {
       .join('')
   }
 
-  public find(indexes: Array<number>): HastNode {
+  public blocksBetween(start: HastNode, end: HastNode): Array<HastNode> {
+    return [start, end]
+  }
+
+  public nodeAt(indexes: Array<number>): HastNode {
     return this.downstream(this.root, indexes)
   }
 

@@ -170,7 +170,7 @@ export default class Editor extends React.Component<Props, State> {
   }
 
   private getHastNode(node: Node): HastNode {
-    return this.ast.find(this.upstream(node))
+    return this.ast.nodeAt(this.upstream(node))
   }
 
   private upstream(el: Node, indexes: Array<number> = []): Array<number> {

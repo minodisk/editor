@@ -19,20 +19,6 @@ export const toHtml: (node: HastNode) => string = unified().use(rehypeStringify)
 //   },
 // ).stringify as any
 
-const traverse = (tree: HastNode, pos: Array<number>, find: Find): boolean => {
-  for (let i = 0; i < tree.children.length; i++) {
-    const node = tree.children[i]
-    const p = pos.concat([i])
-    if (find(node, p)) {
-      return true
-    }
-    if (traverse(node, p, find)) {
-      return true
-    }
-  }
-  return false
-}
-
 export interface Properties {
   [key: string]: string
 }
@@ -46,6 +32,32 @@ export interface HastNode extends Node {
 }
 
 export default class Ast {
+  private static traverse(
+    tree: HastNode,
+    pos: Array<number>,
+    find: Find,
+  ): boolean {
+    for (let i = 0; i < tree.children.length; i++) {
+      const node = tree.children[i]
+      const p = pos.concat([i])
+      if (find(node, p)) {
+        return true
+      }
+      if (Ast.traverse(node, p, find)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  private static downstream(node: HastNode, indexes: Array<number>): HastNode {
+    const index = indexes.shift()
+    if (index === undefined) {
+      return node
+    }
+    return Ast.downstream(node.children[index], indexes)
+  }
+
   public root!: HastNode
 
   constructor(html?: string) {
@@ -58,6 +70,14 @@ export default class Ast {
   public setHtml(html: string): void {
     this.root = toAst(html).children[0].children[1] // root.html.body
     this.register(this.root)
+  }
+
+  public traverse(find: Find): void {
+    Ast.traverse(this.root, [], find)
+  }
+
+  public nodeAt(indexes: Array<number>): HastNode {
+    return Ast.downstream(this.root, indexes)
   }
 
   public wrap(
@@ -105,10 +125,6 @@ export default class Ast {
     return pos
   }
 
-  private traverse(find: Find): void {
-    traverse(this.root, [], find)
-  }
-
   public toHtml(): string {
     return this.root.children
       .map(node => {
@@ -119,18 +135,6 @@ export default class Ast {
 
   public blocksBetween(start: HastNode, end: HastNode): Array<HastNode> {
     return [start, end]
-  }
-
-  public nodeAt(indexes: Array<number>): HastNode {
-    return this.downstream(this.root, indexes)
-  }
-
-  private downstream(node: HastNode, indexes: Array<number>): HastNode {
-    const index = indexes.shift()
-    if (index === undefined) {
-      return node
-    }
-    return this.downstream(node.children[index], indexes)
   }
 
   private register(parent: HastNode): void {

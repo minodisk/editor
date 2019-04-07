@@ -30,27 +30,49 @@ describe('Ast', () => {
     ].forEach(({ name, html, target, expected }) => {
       it(name, () => {
         const ast = new Ast(`<html><body>${html}</body></html>`)
-        assert.deepEqual(ast.find(select(target, ast.root)), expected)
+        assert.deepEqual(ast.indexesOf(select(target, ast.root)), expected)
       })
     })
   })
 
-  describe('blocksBetween()', () => {
+  describe('getBetween()', () => {
     ;[
       {
         name: 'should return blocks',
-        html: `<p id="a" /><p id="b" />`,
+        html: `<p id="a" /><p id="b" /><p id="c" />`,
+        start: '#a',
+        end: '#a',
+        expected: [[0]],
+      },
+      {
+        name: 'should return blocks',
+        html: `<p id="a" /><p id="b" /><p id="c" />`,
         start: '#a',
         end: '#b',
         expected: [[0], [1]],
       },
+      {
+        name: 'should return blocks',
+        html: `<p id="a" /><p id="b" /><p id="c" />`,
+        start: '#a',
+        end: '#c',
+        expected: [[0], [1], [2]],
+      },
+      {
+        name: 'should return deep nodes',
+        html: `<p><span /><a><span id="a" /></a></p><p id="b" /><p><a><span id="c" /></a></p>`,
+        start: '#a',
+        end: '#c',
+        expected: [[0], [1], [2]],
+      },
     ].forEach(({ name, html, start, end, expected }) => {
       it(name, () => {
         const ast = new Ast(`<html><body>${html}</body></html>`)
-        assert.deepEqual(
-          ast.blocksBetween(select(start, ast.root), select(end, ast.root)),
-          expected.map(indexes => ast.nodeAt(indexes)),
+        const actual = ast.getBetween(
+          select(start, ast.root),
+          select(end, ast.root),
         )
+        assert.deepEqual(actual.map(ast.indexesOf), expected)
       })
     })
   })

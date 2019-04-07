@@ -166,11 +166,11 @@ export default class Editor extends React.Component<Props, State> {
     const start = this.getHastNode(range.startContainer)
     const end = this.getHastNode(range.endContainer)
 
-    console.log(this.ast.blocksBetween(start, end))
+    console.log(this.ast.getBetween(start, end))
   }
 
   private getHastNode(node: Node): HastNode {
-    return this.ast.nodeAt(this.upstream(node))
+    return this.ast.getNodeAt(this.upstream(node))
   }
 
   private upstream(el: Node, indexes: Array<number> = []): Array<number> {
@@ -197,7 +197,7 @@ export default class Editor extends React.Component<Props, State> {
   }
 
   private update = (html: string) => {
-    this.ast.setHtml(html)
+    this.ast.update(html)
     // console.log('---------------------------')
     // console.log(html)
     // console.log('===')

@@ -37,6 +37,9 @@ export default class Ast {
     pos: Array<number>,
     find: Find,
   ): boolean {
+    if (!tree.children) {
+      return false
+    }
     for (let i = 0; i < tree.children.length; i++) {
       const node = tree.children[i]
       const p = pos.concat([i])
@@ -64,30 +67,42 @@ export default class Ast {
     if (!html) {
       return
     }
-    this.setHtml(html)
+    this.update(html)
   }
 
-  public setHtml(html: string): void {
+  public update = (html: string): void => {
     this.root = toAst(html).children[0].children[1] // root.html.body
     this.register(this.root)
   }
 
-  public traverse(find: Find): void {
+  public traverse = (find: Find): void => {
     Ast.traverse(this.root, [], find)
   }
 
-  public nodeAt(indexes: Array<number>): HastNode {
+  public getNodeAt = (indexes: Array<number>): HastNode => {
     return Ast.downstream(this.root, indexes)
   }
 
-  public wrap(
+  public indexesOf = (node: HastNode): Array<number> => {
+    let pos: Array<number> = []
+    this.traverse((n: HastNode, p: Array<number>) => {
+      const found = n === node
+      if (found) {
+        pos = p
+      }
+      return found
+    })
+    return pos
+  }
+
+  public wrap = (
     start: HastNode,
     end: HastNode,
     startOffset: number,
     endOffset: number,
     tagName: string,
     properties: { [key: string]: string },
-  ): void {
+  ): void => {
     if (start === end) {
       console.log('wrap:', start, end, tagName, properties)
 
@@ -113,19 +128,7 @@ export default class Ast {
     }
   }
 
-  public find(node: HastNode): Array<number> {
-    let pos: Array<number> = []
-    this.traverse((n: HastNode, p: Array<number>) => {
-      const found = n === node
-      if (found) {
-        pos = p
-      }
-      return found
-    })
-    return pos
-  }
-
-  public toHtml(): string {
+  public toHtml = (): string => {
     return this.root.children
       .map(node => {
         return toHtml(node)
@@ -133,16 +136,38 @@ export default class Ast {
       .join('')
   }
 
-  public blocksBetween(start: HastNode, end: HastNode): Array<HastNode> {
-    return [start, end]
+  public getBetween = (start: HastNode, end: HastNode): Array<HastNode> => {
+    const s = this.indexesOf(start)
+    const e = this.indexesOf(end)
+    const maxDepth = Math.min(s.length, e.length) - 1
+    const indexes = []
+    for (let depth = 0; depth <= maxDepth; depth++) {
+      const si = s[depth]
+      const ei = e[depth]
+      if (si === ei) {
+        indexes[depth] = si
+        if (depth !== maxDepth) {
+          continue
+        }
+        // start and end are complete same position
+        return [start]
+      }
+
+      const nodes = []
+      for (let j = si; j <= ei; j++) {
+        nodes.push(this.getNodeAt(indexes.concat([j])))
+      }
+      return nodes
+    }
+    return []
   }
 
-  private register(parent: HastNode): void {
-    if (!parent.children) {
+  private register = (node: HastNode): void => {
+    if (!node.children) {
       return
     }
-    parent.children.forEach((child, index) => {
-      child.parent = parent
+    node.children.forEach((child, index) => {
+      child.parent = node
       child.index = index
       this.register(child)
     })
